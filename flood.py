@@ -1,6 +1,7 @@
 #EAL(Expected Annual Loss) Calculator for parents home flood risk
 #Needs: Expected Annual Damages
 
+import math
 from typing import List, Tuple
 
 #houses replacement value incase of complete damge
@@ -12,7 +13,9 @@ Important Data
 Basement floor elevation: 110.5 ft 
 $733,072 is houses estimated value based on Redfin. Denoted as replacement_value
 
-
+Overall Flooding Hazard is High according to NC Flood Risk Information System(FRIS).
+Expected Annual Loss($) = 0. Why? Hazard is about location risk, not guaranteed building damage.
+House is located near flood plain though is not at risk of flooding. :)
 """
 
 #(annualProbability, depth_ft);
@@ -31,6 +34,7 @@ for p, depth in rows:
 
 #Simple Damage Ratios Mark 1
 #Damage ratios are assumptioms
+"""
 def damageRatio(depth_ft: float) -> float:
     if depth_ft <= 0:
         return 0.0 
@@ -42,6 +46,25 @@ def damageRatio(depth_ft: float) -> float:
         return 0.35
     else:
         return 0.6
+"""
+
+#logistic curve mark 2
+"""
+K denotes steepness. K is greater -> greater slope.
+logistic function 
+f(x) = 1 / [1 + e^( -k ( x-m ))]
+m(midpoint) is where damage reaches 50% of maximum damage
+m = 4 ft for typical residential housing
+"""
+def damageRatio(depth_ft):
+    if depth_ft <= 0:
+        return 0.0
+    
+    k = 0.8
+    midpoint = 4
+    #f(x) = 1 / [1 + e^( -k ( x-m ))]
+    ratio = 1 / (1 + max.exp(-k * (depth_ft - midpoint)))
+    return min(ratio, 1.0)
     
 def compute_eal(rows: List[Tuple[float, float]], replacement_value: float) -> float:
     rows = sorted(rows, key=lambda x: x[0], reverse=True) #exceedance probabilities in descending order 0.10, 0.04, ...
@@ -67,3 +90,4 @@ def compute_eal(rows: List[Tuple[float, float]], replacement_value: float) -> fl
 
 eal = compute_eal(rows, replacement_value)
 print("Expected Annual Loss($): ", round(eal, 2))
+
